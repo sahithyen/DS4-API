@@ -1,3 +1,4 @@
+import time
 import hid
 
 
@@ -7,12 +8,31 @@ class DS4(object):
         self.device = hid.device()
 
         self.device.open_path(deviceInfo['path'])
+
+        self.__rumbleRight = 0
+        self.__rumbleLeft = 0
+        self.__red = 0
+        self.__green = 0
+        self.__blue = 0
+        self.__onDuration = 0
+        self.__offDuration = 0
         pass
 
-    def setLightbarColor(self, red, green, blue):
+    def setRumble(self, right, left):
+        self.__rumbleRight = right
+        self.__rumbleLeft = left
+
+        self.__updateActuator()
+        pass
+
+    def setLightbarColor(self, red, green, blue, on=0, off=0):
         self.__red = red
         self.__green = green
         self.__blue = blue
+        self.__onDuration = on
+        self.__offDuration = off
+
+        self.__updateActuator()
         pass
 
     def update(self):
@@ -47,6 +67,22 @@ class DS4(object):
         self.r2Analog = data[9 + offset]
 
         self.timestamp = data[7 + offset] >> 2
+        pass
+
+    def __updateActuator(self):
+        self.device.write([
+            0x05,
+            0xff,
+            0x04,
+            0x00,
+            self.__rumbleRight,
+            self.__rumbleLeft,
+            self.__red,
+            self.__green,
+            self.__blue,
+            self.__onDuration,
+            self.__offDuration
+        ])
         pass
 
     def __del__(self):
